@@ -4,8 +4,7 @@ from uuid import UUID
 import json
 
 class ClipboardConnectionManager:
-    def __init__(self):
-        # Mapeia user_id -> lista de conexões websocket ativas
+    def __init__(self):        
         self.active_connections: Dict[UUID, List[WebSocket]] = {}
 
     async def connect(self, user_id: UUID, websocket: WebSocket):
@@ -22,13 +21,12 @@ class ClipboardConnectionManager:
                 del self.active_connections[user_id]
 
     async def broadcast_to_user(self, user_id: UUID, message: dict, sender_websocket: WebSocket = None):
-        """
-        Envia a mensagem para TODOS os dispositivos do usuário.
-        Se `sender_websocket` for passado, pode opcionalmente evitar re-enviar para o próprio dispositivo emissor.
-        """
+        '''
+        Broadcast da mensagem para os devices
+        Se `sender_websocket` for passado, pode enviar a mensagem de volta para o emissor
+        '''
         if user_id in self.active_connections:
-            for connection in self.active_connections[user_id]:
-                # Envia para todos os dispositivos conectados do usuário
+            for connection in self.active_connections[user_id]:                
                 await connection.send_text(json.dumps(message))
 
 manager = ClipboardConnectionManager()
