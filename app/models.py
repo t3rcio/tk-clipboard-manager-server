@@ -1,9 +1,30 @@
+from sqlalchemy import Column, String, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr, Field
-from uuid import UUID, uuid4
 from datetime import datetime
-from typing import Optional, List
+from uuid import UUID, uuid4
 
-# Users
+from app.database import Base
+
+class UserDB(Base):
+    __tablename__ = "users"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    email = Column(String, unique=True, index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    devices = relationship("DeviceDB", back_populates="owner", cascade="all, delete-orphan")
+
+
+class DeviceDB(Base):
+    __tablename__ = "devices"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    nome = Column(String, nullable=False)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    last_seen = Column(DateTime, default=datetime.utcnow)
+    owner = relationship("UserDB", back_populates="devices")
+
+
 class UserBase(BaseModel):
     email: EmailStr
 
@@ -11,14 +32,12 @@ class UserCreate(UserBase):
     password: str
 
 class User(UserBase):
-    id: UUID = Field(default_factory=uuid4)
-    created_at: datetime = Field(default_factory=datetime.now)
+    id: UUID
+    created_at: datetime
 
     class Config:
         from_attributes = True
 
-
-# Devices
 class DeviceBase(BaseModel):
     nome: str
 
@@ -26,16 +45,8 @@ class DeviceCreate(DeviceBase):
     user_id: UUID
 
 class Device(DeviceBase):
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID
     user_id: UUID
-    last_seen: Optional[datetime] = None
 
     class Config:
         from_attributes = True
-
-# Paylod for websockets
-class ClipboardPayload(BaseModel):
-    user_id: UUID
-    device_id: UUID
-    content: str
-    timestamp: datetime = Field(default_factory=datetime.now)
