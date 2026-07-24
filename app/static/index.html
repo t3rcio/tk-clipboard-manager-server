@@ -70,6 +70,22 @@
                 <span>🚀</span> Enviar para todos
             </button>
         </section>
+        <section id="history-section" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-md flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm">📜</span>
+                    <h3 class="text-sm font-semibold text-slate-200">Histórico do Dispositivo</h3>
+                </div>
+                <button id="btn-clear-history" class="text-xs text-rose-400 hover:text-rose-300 transition flex items-center gap-1">
+                    🗑️ Limpar
+                </button>
+            </div>
+
+            <!-- Lista de itens do histórico -->
+            <div id="history-list" class="flex flex-col gap-3 max-h-80 overflow-y-auto pr-1">
+                <p class="text-xs text-slate-500 text-center py-2">Nenhum item salvo no histórico local.</p>
+            </div>
+        </section>        
 
     </main>
 
