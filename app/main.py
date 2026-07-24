@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 import os
@@ -86,6 +86,7 @@ async def clipboard_websocket_endpoint(
     websocket: WebSocket,
     user_id: UUID,
     device_id: UUID,
+    last_msg_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     device = db.query(DeviceDB).filter(
@@ -99,6 +100,9 @@ async def clipboard_websocket_endpoint(
 
     await manager.connect(user_id, websocket)
     try:
+        if last_msg_id:
+            await manager.sync_missed_messages(user_id, websocket, last_msg_id)
+        
         await websocket.send_text(json.dumps({
             "type": "system",
             "message": f"Dispositivo '{device.nome}' conectado"
@@ -108,6 +112,11 @@ async def clipboard_websocket_endpoint(
             data_raw = await websocket.receive_text()
             try:
                 data = json.loads(data_raw)
+                if data.get("type") == "sync_request":
+                    client_last_id = data.get("last_msg_id", 0)
+                    await manager.sync_missed_messages(user_id, websocket, client_last_id)
+                    continue                
+                
                 content = data.get("content", "")
             except json.JSONDecodeError:
                 content = data_raw

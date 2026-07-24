@@ -19,6 +19,7 @@ const btnSend = document.getElementById('btn-send');
 let socket = null;
 let userId = localStorage.getItem('clipsync_user_id') || '';
 let deviceId = localStorage.getItem('clipsync_device_id') || '';
+let lastReceivedMsgId = localStorage.getItem('clipsync_last_msg_id') || 0;
 
 // Inicialização
 function init() {
@@ -166,42 +167,45 @@ btnSaveConfig.addEventListener('click', () => {
 
 // WebSocket
 function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/clipboard/${userId}/${deviceId}`;
-
-    updateStatus('Conectando...', 'bg-amber-500/20', 'text-amber-300', 'bg-amber-400');
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';    
+    const wsUrl = `${protocol}//${window.location.host}/ws/clipboard/${userId}/${deviceId}?last_msg_id=${lastReceivedMsgId}`;
 
     socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
         updateStatus('Conectado', 'bg-emerald-500/20', 'text-emerald-300', 'bg-emerald-400');
+        
+        // Solicitação extra de segurança ao abrir o socket
+        if (lastReceivedMsgId > 0) {
+            socket.send(JSON.stringify({
+                type: 'sync_request',
+                last_msg_id: Number(lastReceivedMsgId)
+            }));
+        }
     };
 
     socket.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
 
-            if (data.type === 'clipboard_update' && data.sender_device_id !== deviceId) {
-                clipboardDisplay.value = data.content;
-                const sender = data.sender_device_name || 'Outro aparelho';
-                senderInfo.textContent = `Vindo de: ${sender}`;
-                
-                // Adiciona automaticamente ao histórico local
-                addToHistory(data.content, sender);
+            if (data.type === 'clipboard_update') {
+                // Guarda o ID da última mensagem processada
+                if (data.msg_id) {
+                    lastReceivedMsgId = data.msg_id;
+                    localStorage.setItem('clipsync_last_msg_id', data.msg_id);
+                }
+
+                if (data.sender_device_id !== deviceId) {
+                    clipboardDisplay.value = data.content;
+                    const sender = data.sender_device_name || 'Outro aparelho';
+                    senderInfo.textContent = `Vindo de: ${sender}`;
+                    
+                    addToHistory(data.content, sender);
+                }
             }
         } catch (e) {
-            console.error('Erro ao processar mensagem:', e);
+            console.error(e);
         }
-    };
-
-    socket.onclose = () => {
-        updateStatus('Desconectado', 'bg-rose-500/20', 'text-rose-300', 'bg-rose-400');
-        setTimeout(connectWebSocket, 4000);
-    };
-
-    socket.onerror = (err) => {
-        console.error('Erro no WebSocket:', err);
-        socket.close();
     };
 }
 
