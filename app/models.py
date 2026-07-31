@@ -11,6 +11,7 @@ class UserDB(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     devices = relationship("DeviceDB", back_populates="owner", cascade="all, delete-orphan")
 
@@ -27,6 +28,18 @@ class DeviceDB(Base):
 
 class UserBase(BaseModel):
     email: EmailStr
+    password: str
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: EmailStr
+
+    class Config:
+        from_attributes = True
 
 class UserCreate(UserBase):
     password: str
@@ -50,3 +63,13 @@ class Device(DeviceBase):
 
     class Config:
         from_attributes = True
+class DeviceCreateSimple(BaseModel):
+    nome: str
+    user_id: str
+
+class DeviceCodeRequest(BaseModel):
+    device_name: str
+
+class PairApproveRequest(BaseModel):
+    code: str
+    user_id: str    
