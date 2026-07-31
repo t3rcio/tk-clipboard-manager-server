@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClipBoardSync Web</title>
+    <title>ClipSync Web</title>
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,77 +14,123 @@
     <header class="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center shadow-lg">
         <div class="flex items-center space-x-2">
             <span class="text-2xl">📋</span>
-            <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">ClipBoardSync</h1>
+            <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">ClipSync</h1>
         </div>
-        <div id="status-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            Desconectado
+        
+        <div class="flex items-center gap-3">
+            <div id="status-badge" class="hidden px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                Desconectado
+            </div>
+            <button id="btn-logout" class="hidden text-xs text-rose-400 hover:text-rose-300 font-medium transition">
+                Sair
+            </button>
         </div>
     </header>
 
-    <main class="flex-1 p-4 max-w-lg mx-auto w-full flex flex-col gap-5">
+    <main class="flex-1 p-4 max-w-lg mx-auto w-full flex flex-col gap-5 pb-10">
 
-        <!-- Card de Configuração Inicial (Exibido apenas se não configurado) -->
-        <section id="config-card" class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-md flex flex-col gap-4">
-            <h2 class="text-lg font-semibold text-indigo-300">Conectar Dispositivo</h2>
-            <p class="text-xs text-slate-400">Informe os IDs de Usuário e Dispositivo criados no painel/API:</p>
+        <!-- TELA 1: LOGIN / CADASTRO DE USUÁRIO -->
+        <section id="auth-card" class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-md flex flex-col gap-4">
+            <div class="flex border-b border-slate-700 pb-2 gap-4">
+                <button id="tab-login" type="button" class="text-indigo-400 font-bold border-b-2 border-indigo-500 pb-1 cursor-pointer">Entrar</button>
+                <button id="tab-register" type="button" class="text-slate-400 font-medium pb-1 cursor-pointer">Criar Conta</button>
+            </div>
+
+            <form id="auth-form" class="flex flex-col gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">E-mail</label>
+                    <input type="email" id="auth-email" required placeholder="seu@email.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Senha</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <button type="submit" id="btn-auth-submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 mt-2">
+                    Entrar
+                </button>
+            </form>
+        </section>
+
+        <!-- TELA 2: REGISTRO DO DISPOSITIVO ATUAL -->
+        <section id="device-setup-card" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-md flex flex-col gap-4">
+            <h2 class="text-lg font-semibold text-indigo-300">Conectar este Aparelho</h2>
+            <p class="text-xs text-slate-400">Dê um nome amigável para identificar este navegador ou smartphone na sua conta:</p>
             
             <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">User ID (UUID)</label>
-                <input type="text" id="input-user-id" placeholder="12345678-..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500">
+                <label class="block text-xs font-medium text-slate-300 mb-1">Nome do Dispositivo</label>
+                <input type="text" id="input-device-name" placeholder="Ex: Meu Smartphone, Chrome do Trabalho..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
             </div>
 
-            <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Device ID (UUID)</label>
-                <input type="text" id="input-device-id" placeholder="87654321-..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500">
-            </div>
-
-            <button id="btn-save-config" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition shadow-lg shadow-indigo-600/20">
-                Salvar e Conectar
+            <button id="btn-register-device" type="button" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl transition shadow-lg shadow-emerald-600/20">
+                ➕ Conectar este Dispositivo
             </button>
         </section>
 
-        <!-- Card do Clipboard Recebido -->
+        <!-- TELA 3: DASHBOARD PRINCIPAL -->
+
+        <!-- Card de Pareamento do Desktop / Applet via PIN -->
+        <section id="pair-section" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-md flex flex-col gap-3">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">🔗</span>
+                <h3 class="text-sm font-semibold text-indigo-300">Parear Computador (Applet / Daemon)</h3>
+            </div>
+            <p class="text-xs text-slate-400">Digite o PIN de 6 dígitos gerado no menu do seu computador para autorizá-lo:</p>
+            
+            <div class="flex gap-2">
+                <input type="text" id="input-pin-code" maxlength="6" placeholder="000000" 
+                    class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-center text-lg font-mono tracking-widest text-slate-100 focus:outline-none focus:border-indigo-500 uppercase">
+                
+                <button id="btn-approve-pin" type="button" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 rounded-xl transition shadow-lg shadow-indigo-600/20">
+                    Autorizar
+                </button>
+            </div>
+        </section>
+
+        <!-- Card do Clipboard Atual -->
         <section id="main-card" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-md flex flex-col gap-4">
             <div class="flex justify-between items-center">
-                <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Último conteúdo recebido</span>
-                <span id="sender-info" class="text-xs text-indigo-400"></span>
+                <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Último recebido</span>
+                <span id="sender-info" class="text-xs text-indigo-400 font-medium"></span>
             </div>
 
-            <textarea id="clipboard-display" readonly rows="4" placeholder="Aguardando dados do PC ou de outros dispositivos..." 
+            <textarea id="clipboard-display" readonly rows="3" placeholder="Aguardando dados dos outros dispositivos..." 
                 class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm font-mono text-slate-200 resize-none focus:outline-none focus:border-indigo-500"></textarea>
 
-            <button id="btn-copy" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition flex justify-center items-center gap-2 shadow-lg shadow-indigo-600/20">
+            <button id="btn-copy" type="button" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition flex justify-center items-center gap-2 shadow-lg shadow-indigo-600/20">
                 <span>📋</span> Copiar para este aparelho
             </button>
         </section>
 
-        <!-- Enviar manualmente do Celular para o PC -->
+        <!-- Card de Envio -->
         <section id="send-card" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-md flex flex-col gap-3">
-            <h3 class="text-sm font-medium text-slate-300">Enviar texto para os outros dispositivos</h3>
-            <textarea id="send-input" rows="3" placeholder="Digite ou cole um texto aqui para enviar ao PC..." 
+            <h3 class="text-sm font-medium text-slate-300">Enviar para todos os dispositivos</h3>
+            <textarea id="send-input" rows="2" placeholder="Digite ou cole um texto aqui para enviar..." 
                 class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-200 resize-none focus:outline-none focus:border-indigo-500"></textarea>
 
-            <button id="btn-send" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-100 font-medium py-2.5 rounded-xl transition flex justify-center items-center gap-2">
+            <button id="btn-send" type="button" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-100 font-medium py-2.5 rounded-xl transition flex justify-center items-center gap-2">
                 <span>🚀</span> Enviar para todos
             </button>
         </section>
+
+        <!-- Histórico Local do Dispositivo -->
         <section id="history-section" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-md flex flex-col gap-4">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                 <div class="flex items-center gap-2">
                     <span class="text-sm">📜</span>
                     <h3 class="text-sm font-semibold text-slate-200">Histórico do Dispositivo</h3>
                 </div>
-                <button id="btn-clear-history" class="text-xs text-rose-400 hover:text-rose-300 transition flex items-center gap-1">
+                <button id="btn-clear-history" type="button" class="text-xs text-rose-400 hover:text-rose-300 transition flex items-center gap-1">
                     🗑️ Limpar
                 </button>
             </div>
 
-            <!-- Lista de itens do histórico -->
             <div id="history-list" class="flex flex-col gap-3 max-h-80 overflow-y-auto pr-1">
                 <p class="text-xs text-slate-500 text-center py-2">Nenhum item salvo no histórico local.</p>
             </div>
-        </section>        
+        </section>
 
     </main>
 
