@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  clipsync-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clipsync_server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/code/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=sqlite:////code/data/clipsync.db
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
