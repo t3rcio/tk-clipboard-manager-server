@@ -14,7 +14,7 @@ class ClipboardConnectionManager:
         self.buffer_size = buffer_size
 
     async def connect(self, user_id: UUID, websocket: WebSocket):
-        await websocket.accept()
+        # await websocket.accept()
         if user_id not in self.active_connections:
             self.active_connections[user_id] = []
         self.active_connections[user_id].append(websocket)
